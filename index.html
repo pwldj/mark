@@ -3,37 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <title>jquery框选</title>
-    <link rel="stylesheet" href="./css/bootstrap.min.css">
-    <script src="./js/jquery-3.3.1.min.js"></script>
-    <script src="./js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <body>
     <div class="container select-box-container">
         <div class="toggle-all-container">
             <a href="javascript:" class="btn btn-md btn-default toggle-all-btn">全选/取消全选</a>
         </div>
-        <div id="1" class="fileDiv select-item">file1</div>
-        <div class="fileDiv select-item">file2</div>
-        <div class="fileDiv select-item">file3</div>
-        <div class="fileDiv select-item">file4</div>
-        <div class="fileDiv select-item">file5</div>
-        <div class="fileDiv select-item">file6</div>
-        <div class="fileDiv select-item">file7</div>
-        <div class="fileDiv select-item">file8</div>
-        <div class="fileDiv select-item">file9</div>
-        <div class="fileDiv select-item">file10</div>
-        <div class="fileDiv select-item">file11</div>
-        <div class="fileDiv select-item">file12</div>
-        <div class="fileDiv select-item">file13</div>
-        <div class="fileDiv select-item">file14</div>
-        <div class="fileDiv select-item">file15</div>
-        <div class="fileDiv select-item">file16</div>
-        <div class="fileDiv select-item">file17</div>
+    </div>
+    <div class="btn-group btn-container" id="label" data-toggle="buttons">
+        <label class="btn btn-primary">
+            <input type="radio" name="options" value="1" id="option1"> 选项 1
+        </label>
+        <label class="btn btn-primary">
+            <input type="radio" name="options" value="2" id="option2"> 选项 2
+        </label>
+        <label class="btn btn-primary">
+            <input type="radio" name="options" value="3" id="option3"> 选项 3
+        </label>
+        <a href="javascript:" id="conform" class="btn btn-md btn-default" >确定</a>
     </div>
 
-    <div style="margin:20px 100px;">
-        <h4>选中文件：</h4>
-        <div id="data"></div>
-    </div>
 
     <style>
         .container {
@@ -43,6 +34,12 @@
             text-align: center;
         }
 
+        .btn-container{
+            padding: 20px;
+            margin: 100px 100px 20px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
         .select-box-container {
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -56,141 +53,80 @@
             margin-bottom: 25px;
         }
 
+        .mark{
+            font-size: 15px;
+            background-color: transparent;
+        }
+
         .select-item {
             display: inline-block;
-            /*width: 100px;*/
-            /*height: 50px;*/
-            /*text-align: center;*/
-            /*line-height: 50px;*/
-            /*font-size: 12px;*/
-            /*border: 1px solid #ccc;*/
-            margin-right: 10px;
-            margin-bottom: 10px;
-            /*cursor: pointer;*/
+            font-size: 22px;
             color: inherit;
-            /*margin: 0 3px;*/
-            /*display: inline;*/
+            margin: 10px 10px;
             padding: 5px 8px;
-            /*background: #ffe184;*/
             font-weight: bold;
             line-height: 1;
             -webkit-box-decoration-break: clone;
         }
-        .select-item.selected,
+        .select-item.selected{
+            background-color: #fbffbf;
+        }
         .select-item.temp-selected {
-            background-color: #ffe184;
+            background-color: #94aaff;
         }
-        .select-box-dashed {
-            position: absolute;
-            display: none;
-            width: 0px;
-            height: 0px;
-            padding: 0px;
-            margin: 0px;
-            border: 1px dashed #0099ff;
-            background-color: #c3d5ed;
-            opacity: 0.5;
-            filter: alpha(opacity=50);
-            font-size: 0px;
-            z-index: 99999;
-            pointer-events: none;
-        }
+
     </style>
 
     <script>
-        var initSelectBox = function(selector, selectCallback) {
-            function clearBubble(e) {
-                if (e.stopPropagation) {
-                    e.stopPropagation();
-                } else {
-                    e.cancelBubble = true;
-                }
-
-                if (e.preventDefault) {
-                    e.preventDefault();
-                } else {
-                    e.returnValue = false;
-                }
-            }
+        var initSelectBox = function(selector) {
+            var data=['周二','(','8月21日',')','，','国际','原油','价格','总体','持稳','。','尽管','美国','燃料','市场','将',
+                '收紧','，','且','美国','即将','对','伊朗','实施','的','制裁','可能','也','会','导致',
+                '全球','市场','供应','减少','，','但','交易商','指出','，','在','中美','贸易争端','未解决','的','情况下',
+                '，','整体','油市','人气','仍','谨慎','。'];
             var $container = $(selector);
+            var selected = [];
+            var temp_selected = [];
+            $.each(data,function (index, val) {
+                let $selete_item = $('<div class="fileDiv select-item"></div>');
+                $selete_item.text(val);
+                $selete_item.attr('id',index);
+                $container.append($selete_item);
+            });
+
+            var id = 0;
+            $container.find('.select-item').each(function () {
+                $(this).attr('id','word'+id++)
+            });
+            var start = true;
+            var start_pos = -1;
+            var simgle = false;
             //  框选事件
             $container
-                .on('mousedown', function(eventDown) {
-                    //  设置选择的标识
-                    var isSelect = true;
-                    //  创建选框节点
-                    var $selectBoxDashed = $('<div class="select-box-dashed"></div>');
-                    $('body').append($selectBoxDashed);
-                    //  设置选框的初始位置
-                    var startX = eventDown.x || eventDown.clientX;
-                    var startY = eventDown.y || eventDown.clientY;
-                    $selectBoxDashed.css({
-                        left: startX,
-                        top : startY
-                    });
-                    //  根据鼠标移动，设置选框宽高
-                    var _x = null;
-                    var _y = null;
-                    //  清除事件冒泡、捕获
-                    clearBubble(eventDown);
-                    //  监听鼠标移动事件
-                    $(selector).on('mousemove', function(eventMove) {
-                        //  设置选框可见
-                        $selectBoxDashed.css('display', 'block');
-                        //  根据鼠标移动，设置选框的位置、宽高
-                        _x = eventMove.x || eventMove.clientX;
-                        _y = eventMove.y || eventMove.clientY;
-                        //  暂存选框的位置及宽高，用于将 select-item 选中
-                        var _left   = Math.min(_x, startX);
-                        var _top    = Math.min(_y, startY);
-                        var _width  = Math.abs(_x - startX);
-                        var _height = Math.abs(_y - startY);
-                        $selectBoxDashed.css({
-                            left  : _left,
-                            top   : _top,
-                            width : _width,
-                            height: _height
-                        });
-                        //  遍历容器中的选项，进行选中操作
-                        $(selector).find('.select-item').each(function() {
-                            var $item = $(this);
-                            var itemX_pos = $item.prop('offsetWidth') + $item.prop('offsetLeft');
-                            var itemY_pos = $item.prop('offsetHeight') + $item.prop('offsetTop');
-                            //  判断 select-item 是否与选框有交集，添加选中的效果（ temp-selected ，在事件 mouseup 之后将 temp-selected 替换为 selected）
-                            var condition1 = itemX_pos > _left;
-                            var condition2 = itemY_pos > _top;
-                            var condition3 = $item.prop('offsetLeft') < (_left + _width);
-                            var condition4 = $item.prop('offsetTop') < (_top + _height);
-                            if (condition1 && condition2 && condition3 && condition4) {
-                                $item.addClass('temp-selected');
-                                // alert($item.attr("id"));
-                            } else {
-                                $item.removeClass('temp-selected');
-                            }
-                        });
-                        //  清除事件冒泡、捕获
-                        clearBubble(eventMove);
-                    });
-
-                    $(document).on('mouseup', function() {
-                        $(selector).off('mousemove');
-                        $(selector)
-                            .find('.select-item.temp-selected')
-                            .removeClass('temp-selected')
-                            .addClass('selected');
-                        $selectBoxDashed.remove();
-
-                        if (selectCallback) {
-                            selectCallback();
-                        }
-                    });
-                })
                 //  点选切换选中事件
                 .on('click', '.select-item', function() {
-                    if ($(this).hasClass('selected')) {
-                        $(this).removeClass('selected');
-                    } else {
-                        $(this).addClass('selected');
+                    var select_id = Number($(this).attr('id').substring(4));
+                    isContain(select_id);
+                    if(start){
+                        start_pos = select_id;
+                        $(this).addClass('temp-selected');
+                        start = false;
+                    }else {
+                        if(start_pos>select_id){
+                            var temp = start_pos;
+                            start_pos = select_id;
+                            select_id = temp;
+                        }
+                        for (var key = 0;key<selected.length;key++)
+                            if(start_pos<selected[key][0]&&select_id>selected[key][1]) {
+                                removeItem(selected[key][0],selected[key][1]);
+                                temp_selected.splice($.inArray([selected[key][0],selected[key][1]]),1);
+                                selected.splice(key, 1);
+                                key--;
+                            }
+                        addItem(start_pos,select_id);
+                        selected.push([start_pos,select_id]);
+                        temp_selected.push([start_pos,select_id]);
+                        start = true;
                     }
                 })
                 //  点选全选全不选
@@ -203,9 +139,51 @@
                         $container.find('.select-item').addClass('selected');
                     }
                 });
+            var isContain = function (index) {
+                for (var key = 0;key<selected.length;key++)
+                    if(index>=selected[key][0]&&index<=selected[key][1]) {
+                        removeItem(selected[key][0],selected[key][1]);
+                        temp_selected.splice($.inArray([selected[key][0],selected[key][1]]),1);
+                        selected.splice(key, 1);
+                        key--;
+                    }
+            };
+            var removeItem = function (start,end) {
+                for(var key = start;key<=end;key++)
+                    $('#word'+key).removeClass('temp-selected').removeClass('selected').css('margin','10px 10px')
+                $('#word'+start+' mark').remove();
+                $('#word'+end+' mark').remove();
+            };
+            var addItem = function (start,end) {
+                for(var key = start;key<=end;key++)
+                    $('#word'+key).addClass('temp-selected').css('margin','10px 0px')
+                $('#word'+start).append('<mark class="mark">s</mark>').css('margin','10px 0px 10px 10px');
+                $('#word'+end).append('<mark class="mark">e</mark>').css('margin','10px 10px 10px 0px');
+            };
+
+            $('#label input[name="options"]').change(function(){
+                var label  = $('#label input[name="options"]:checked').val();
+                temp_selected.forEach(function (val,index,arr) {
+                    $('#word'+val[0]+' mark').remove();
+                    $('#word'+val[1]+' mark').remove();
+                    $('#word'+val[1]).append('<mark class="mark">'+label+'</mark>')
+                })
+            });
+            $('#conform').on('click',function () {
+                if($('#label input[name="options"]:checked').val()===undefined)
+                    alert("选个标签啊");
+                else if(start === false && simgle===false) {
+                    alert("没选尾节点啊")
+                }else{
+                    $('.temp-selected').removeClass('temp-selected').addClass('selected');
+                    temp_selected = [];
+                }
+            })
+
         };
 
         initSelectBox('.container');
+
     </script>
 </body>
 </html>

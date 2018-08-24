@@ -9,19 +9,12 @@
 <body>
     <div class="container select-box-container">
         <div class="toggle-all-container">
-            <a href="javascript:" class="btn btn-md btn-default toggle-all-btn">全选/取消全选</a>
+            <a href="javascript:" class="btn btn-md btn-default toggle-all-btn">多选</a>
         </div>
     </div>
     <div class="btn-group btn-container" id="label" data-toggle="buttons">
-        <label class="btn btn-primary">
-            <input type="radio" name="options" value="1" id="option1"> 选项 1
-        </label>
-        <label class="btn btn-primary">
-            <input type="radio" name="options" value="2" id="option2"> 选项 2
-        </label>
-        <label class="btn btn-primary">
-            <input type="radio" name="options" value="3" id="option3"> 选项 3
-        </label>
+    </div>
+    <div class="btn-group btn-container" data-toggle="buttons">
         <a href="javascript:" id="conform" class="btn btn-md btn-default" >确定</a>
     </div>
 
@@ -79,19 +72,28 @@
 
     <script>
         var initSelectBox = function(selector) {
-            var data=['周二','(','8月21日',')','，','国际','原油','价格','总体','持稳','。','尽管','美国','燃料','市场','将',
+            var article=['周二','(','8月21日',')','，','国际','原油','价格','总体','持稳','。','尽管','美国','燃料','市场','将',
                 '收紧','，','且','美国','即将','对','伊朗','实施','的','制裁','可能','也','会','导致',
                 '全球','市场','供应','减少','，','但','交易商','指出','，','在','中美','贸易争端','未解决','的','情况下',
                 '，','整体','油市','人气','仍','谨慎','。'];
+            var label = {'adj':'形容词','n':'名词','adv':'副词','v':'动词','prep':'介词'};
             var $container = $(selector);
             var selected = [];
             var temp_selected = [];
-            $.each(data,function (index, val) {
+            $.each(article,function (index, val) {
                 let $selete_item = $('<div class="fileDiv select-item"></div>');
                 $selete_item.text(val);
                 $selete_item.attr('id',index);
                 $container.append($selete_item);
             });
+            
+            $.each(label,function (key,value) {
+                let $lable_item = $('<label class="btn btn-primary"><input type="radio" name="options" value='+key+' id='+key+'>'+value+'/'+key+'</label>');
+                // let $lable_input = $('<input type="radio">');
+                // $lable_input.attr({name:"options",value:key,id:key});
+                // $lable_item.append($lable_input).text(value);
+                $('#label').append($lable_item);
+            })
 
             var id = 0;
             $container.find('.select-item').each(function () {
@@ -106,37 +108,43 @@
                 .on('click', '.select-item', function() {
                     var select_id = Number($(this).attr('id').substring(4));
                     isContain(select_id);
-                    if(start){
-                        start_pos = select_id;
-                        $(this).addClass('temp-selected');
-                        start = false;
-                    }else {
-                        if(start_pos>select_id){
-                            var temp = start_pos;
+                    if (simgle) {
+                        addItem(select_id, select_id);
+                        selected.push([select_id, select_id]);
+                        temp_selected.push([select_id, select_id]);
+                    } else {
+                        if (start) {
                             start_pos = select_id;
-                            select_id = temp;
-                        }
-                        for (var key = 0;key<selected.length;key++)
-                            if(start_pos<selected[key][0]&&select_id>selected[key][1]) {
-                                removeItem(selected[key][0],selected[key][1]);
-                                temp_selected.splice($.inArray([selected[key][0],selected[key][1]]),1);
-                                selected.splice(key, 1);
-                                key--;
+                            $(this).addClass('temp-selected');
+                            start = false;
+                        } else {
+                            if (start_pos > select_id) {
+                                var temp = start_pos;
+                                start_pos = select_id;
+                                select_id = temp;
                             }
-                        addItem(start_pos,select_id);
-                        selected.push([start_pos,select_id]);
-                        temp_selected.push([start_pos,select_id]);
-                        start = true;
+                            for (var key = 0; key < selected.length; key++)
+                                if (start_pos < selected[key][0] && select_id > selected[key][1]) {
+                                    removeItem(selected[key][0], selected[key][1]);
+                                    temp_selected.splice($.inArray([selected[key][0], selected[key][1]]), 1);
+                                    selected.splice(key, 1);
+                                    key--;
+                                }
+                            addItem(start_pos, select_id);
+                            selected.push([start_pos, select_id]);
+                            temp_selected.push([start_pos, select_id]);
+                            start = true;
+                        }
                     }
                 })
                 //  点选全选全不选
                 .on('click', '.toggle-all-btn', function() {
-                    if ($(this).attr('data-all')) {
-                        $(this).removeAttr('data-all');
-                        $container.find('.select-item').removeClass('selected');
-                    } else {
-                        $(this).attr('data-all', 1);
-                        $container.find('.select-item').addClass('selected');
+                    if(simgle){
+                        simgle = false;
+                        $(this).text('多选');
+                    }else {
+                        simgle = true;
+                        $(this).text('单选');
                     }
                 });
             var isContain = function (index) {
@@ -172,7 +180,7 @@
             $('#conform').on('click',function () {
                 if($('#label input[name="options"]:checked').val()===undefined)
                     alert("选个标签啊");
-                else if(start === false && simgle===false) {
+                else if(simgle===false && start === false) {
                     alert("没选尾节点啊")
                 }else{
                     $('.temp-selected').removeClass('temp-selected').addClass('selected');
